@@ -1,7 +1,9 @@
 package com.example.java8;
 
+import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class Plus10 implements Function<Integer, Integer> {
 
@@ -50,5 +52,19 @@ public class Plus10 implements Function<Integer, Integer> {
         // UnaryOperator 입력값과 결과 값의 타입이 같은 경우
         
         // BinaryOperaotr 입력값 2개 결과값 1개가 전부 같을 것이라고 봄
+
+
+        Supplier<Integer> get10 = () -> 10;
+
+        BinaryOperator<Integer> get20 = (a, b) -> a + b;
+
+
+
+        System.out.println("test1"+get10.get());
+
+        System.out.println("test2"+get20.apply(2, 4));
+
+
+
     }
 }
