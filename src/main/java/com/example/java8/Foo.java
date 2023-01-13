@@ -1,8 +1,8 @@
 package com.example.java8;
 
-import java.util.function.BinaryOperator;
-import java.util.function.Consumer;
-import java.util.function.IntConsumer;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.function.*;
 
 public class Foo {
 
@@ -68,5 +68,38 @@ public class Foo {
         };
 
         printInt.accept(10);
+
+        System.out.println("==========================");
+
+
+
+        Function<Integer, String> intToString = (i) -> "number";
+
+        System.out.println(intToString.apply(10));
+
+        UnaryOperator<String> hi = (s) -> "hi "+s;
+        // 전환
+
+        UnaryOperator<String> hi2 = Greeting::hi;
+
+        Greeting greeting = new Greeting();
+        UnaryOperator<String> hello = greeting::hello;
+
+        Supplier<Greeting> newGreeting = Greeting::new;
+
+        Function<String, Greeting> newFunction
+                = Greeting::new;
+
+        System.out.println(newFunction.apply("song").getName());
+
+        String [] names = {"song","young","min"};
+        Arrays.sort(names, new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                return 0;
+            }
+        });
+
+        Arrays.sort(names, String::compareToIgnoreCase);
     }
 }
