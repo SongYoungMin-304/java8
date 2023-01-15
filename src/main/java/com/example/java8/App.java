@@ -17,18 +17,41 @@ public class App {
         Stream<String> stringStream = names.stream()
                 .map(String::toUpperCase);
 
+        Stream<String> stringStream2 = names.stream()
+                .map(n -> n.toUpperCase());
 
         // 중계 -> Stream 리턴한다.
         // 종료 - Stream x .collect 등...
 
+        System.out.println("start--");
         stringStream.forEach(System.out::println);
+
+        stringStream2.forEach(s -> System.out.println(s));
+
+        System.out.println("end--");
+
 
         System.out.println("-----------------");
 
-        names.stream().map((s) ->{
+
+        List<String> collect1 = names.stream().map((s) -> {
             System.out.println(s);
             return s.toUpperCase();
         }).collect(Collectors.toList());
+
+        Stream<String> stringStream1 = names.stream().map((s) -> {
+            System.out.println(s);
+            return s.toUpperCase();
+        });
+
+        System.out.println("*************************");
+
+/*
+        collect1.forEach(s -> System.out.println(s));
+
+        stringStream1.forEach(s -> System.out.println(s));
+*/
+
 
         for (String name : names) {
             if(name.startsWith("k")){

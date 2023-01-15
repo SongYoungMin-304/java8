@@ -1,9 +1,6 @@
 package com.example.java8;
 
-import java.util.function.BinaryOperator;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 public class Plus10 implements Function<Integer, Integer> {
 
@@ -19,6 +16,13 @@ public class Plus10 implements Function<Integer, Integer> {
         //
         Function<Integer, Integer> plus11 = (i) ->{
             return i+10;
+        };
+
+        Function<Integer, Integer> plus12 = new Function<Integer, Integer>() {
+            @Override
+            public Integer apply(Integer integer) {
+                return integer + 10;
+            }
         };
 
         System.out.println(plus11.apply(11));
@@ -42,8 +46,16 @@ public class Plus10 implements Function<Integer, Integer> {
         // BIFunction(입력 값을 2개 받아서 1개 반환)
         // Comsumer(입력 값 1개만 받음)
 
+        BiFunction<Integer, Integer, Integer> biFunction = (a, b) ->{
+            return a + b;
+        };
+
+        System.out.println("테스트 영민"+ biFunction.apply(10, 20));
+
         Consumer<Integer> c = (i) -> System.out.println(i);
         c.accept(10);
+
+
 
         // Suppier(반환 값만 있음)
 

@@ -77,6 +77,19 @@ public class Foo {
 
         System.out.println(intToString.apply(10));
 
+
+        Consumer<Integer> test1 = (s) -> {
+            System.out.println(s);
+        };
+
+        Consumer<Integer> test2 = System.out::println;
+
+
+        System.out.println("start");
+        test1.accept(10);
+        test2.accept(10);
+        System.out.println("end");
+
         UnaryOperator<String> hi = (s) -> "hi "+s;
         // 전환
 
