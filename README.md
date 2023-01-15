@@ -70,7 +70,7 @@ public class Foo {
 
 → 함수형 인터페이스의 경우 람다식 사용 가능
 
-
+2023.01.15
 ### 2. 기본적인 함수형 인터페이스
 
 1) Function<Integer, Integer>→ 입력값, 반환값 전부 Interger
