@@ -70,7 +70,7 @@ public class Foo {
 
 → 함수형 인터페이스의 경우 람다식 사용 가능
 
-2023.01.15
+# 2023.01.15
 ### 2. 기본적인 함수형 인터페이스
 
 1) Function<Integer, Integer>→ 입력값, 반환값 전부 Interger
@@ -353,4 +353,149 @@ System.out.println("자바 수업 중에 Test가 들어있는 수업이 있는 �
                 .collect(Collectors.toList());
 
         spring.forEach(System.out::println);
+```
+
+# 2023.01.16
+
+NullPointerException을 방지하게 해주는 기능
+
+클래스 코드
+
+```java
+public class OnlineClass {
+
+    private Integer id;
+
+    private String title;
+
+    private boolean closed;
+
+    private Progress progress;
+
+    public OnlineClass(Integer id, String title, boolean closed) {
+        this.id = id;
+        this.title = title;
+        this.closed = closed;
+    }
+
+    public Progress getProgress() {
+        return progress;
+    }
+
+    public void setProgress(Progress progress) {
+        this.progress = progress;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public boolean isClosed() {
+        return closed;
+    }
+
+    public void setClosed(boolean closed) {
+        this.closed = closed;
+    }
+}
+```
+
+```java
+package com.example.java8.Optional;
+
+import java.time.Duration;
+
+public class Progress {
+
+    private Duration studyDuration;
+
+    private boolean finished;
+
+    public Duration getStudyDuration(){
+        return studyDuration;
+    }
+
+    public void setStudyDuration(Duration studyDuration){
+        this.studyDuration = studyDuration;
+    }
+
+}
+```
+
+IF 처리 관련 예제
+
+```java
+OnlineClass spring_boot = new OnlineClass(1, "spring boot", true);
+
+Progress progress = spring_boot.getProgress();
+
+if(progress != null){
+     System.out.println(progress.getStudyDuration());
+}
+```
+
+→  null 체크를 직접 하는 방식은 바람직하지 않음
+
+Optional 처리 관련 예제
+
+```java
+List<OnlineClass> springClasses = new ArrayList<>();
+        springClasses.add(new OnlineClass(1,"spring boot", true));
+        springClasses.add(new OnlineClass(5, "rest api development", false));
+
+OnlineClass spring_boot = new OnlineClass(1, "spring boot", true);
+
+//
+Optinal<Progress> progress = springClasses.getProgress();
+
+// 값 존재 여부 확인
+progress.isPresent();
+progress.isEmpty();
+
+// 값 가져오기
+progress.get();
+progress.orElse(createNewClass()); //createNewClass 무조건 호출함
+progress.orElseGet(App::createNewClass); //createNewClass 무조건 호출은 아니고 else일때 호출
+progress.orElseThrow(() -> {
+     return new IllegalArugmentException();
+});
+
+// Stream 으로 Optinal 값 가져오기
+Optional<OnlineClass> optional = springClasses.stream().filter(oc -> oc.getTitle().startsWith("spring"))
+                .findFirst();
+
+// Optinal filter 
+Optional<OnlineClass> onlineClass2 = optional.filter(oc -> oc.getId > 0);
+Optional<OnlineClass> onlineClass2 = optional.filter(OnlineClass::isClosed);
+
+// Optional map
+Optional<Integer> integer1 = optional.map((oc) -> oc.getId()); 
+Optional<Integer> integer2 = optional.map(OnlineClass::getId);
+
+Optional<Optional<Progress>> progress4 = optional.map((op) -> op.getProgress());
+
+// 두개를 한번에 까? 준다
+Optional<Progress> progress6 = optional.flatMap((oc) -> oc.getProgress());
+
+Progress progress5 = progress4.get().get();
+
+--------------------------------------------------
+
+private static OnlineClass createNewClass() {
+        System.out.println("creating new online class");
+        return new OnlineClass(10, "New Class", false);
+    }
+
 ```
