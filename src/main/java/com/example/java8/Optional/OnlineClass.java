@@ -19,10 +19,6 @@ public class OnlineClass {
     }
 
     public Optional<Progress> getProgress() {
-        /*if(this.progress == null){
-            throw new IllegalStateException();
-        }*/
-        // 리턴값으로만 쓰기를 권장한다.
         return Optional.ofNullable(progress);
     }
 
