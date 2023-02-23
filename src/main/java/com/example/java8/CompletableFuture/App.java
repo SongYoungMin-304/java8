@@ -17,7 +17,7 @@ public class App {
             //System.out.println("Thread: " + Thread.currentThread().getName());
 
             /*while(true){
-                System.out.println("Thread: " + Thread.currentThread().getName());
+                System.out.rintln("Thread: " + Thread.currentThread().getName());
                 try {
                     Thread.sleep(1000L);
                 } catch (InterruptedException e) {
