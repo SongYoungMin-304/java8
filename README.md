@@ -554,3 +554,184 @@ LocalDateTime now2 = LocalDateTime.now();
 DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss");
 // 결과 : 2019-11-12 07:26:12
 ```
+
+# Thread
+
+- 스레드(thread)란 프로세스(process) 내에서 실제로 작업을 수행하는 주체를 의미합니다.
+- 모든 프로세스에는 한 개 이상의 스레드가 존재하여 작업을 수행합니다.
+
+또한, 두 개 이상의 스레드를 가지는 프로세스를 멀티스레드 프로세스(multi-threaded process)라고 합니다.
+
+### Thread 사용 방법
+
+**1) Thread 상속받기**
+
+```java
+public class ExtendThread extends Thread{
+     
+     public void run(){
+          System.out.println("ExtendsThread Start");
+     }
+
+public static void main(String[] args){
+     ExtendsThread et = new ExtendsThread();
+     et.start();
+}
+
+```
+
+**2) Runnable 상속 받기**
+
+```java
+public class ImplThread implements Runnable{
+
+     @Override
+     public void run(){
+          System.out.println("ExtendsThread Start");
+     }
+
+public static void main(String[] args){
+     Thread thread = new Thread(new ImpleThread());
+     thread.start()
+}
+```
+
+→ 인터페이스를 상속받으면 다중 상속 가능하다.
+
+### Executors 사용 방법
+
+- Thread를 만들고 관리하는 것을 Api Executors에게 위임합니다.
+- Runnable 만 개발자가 만들고 생성, 종료, 없애기 작업들을 Executors가 해줍니다.
+
+```java
+ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+executorService.submit(() -> System.out.println("Thread Test :" + Thread.currentThread().getName()));
+
+executorService.submit(() -> System.out.println("Thread Test :" + Thread.currentThread().getName()));
+
+executorService.shutdown();
+
+// 결과 값
+Thread Test :pool-1-thread-1
+Thread Test :pool-1-thread-1
+
+```
+
+→ 하나의 스레드가 일을 진행해준다.
+
+→ shutdown은 우아한 종료로 하던 작업이 다 끝나면 종료해준다.
+
+- **shutdownNow 를 호출하면 그냥 작업을 하고 있던 말던 종료한다.**
+
+```java
+ExecutorService executorService = Executors.newFixedThreadPool(2);
+
+executorService.submit(addRunnable(1,2));
+
+executorService.submit(addRunnable(1,3));
+
+executorService.submit(addRunnable(1,4));
+
+executorService.submit(addRunnable(1,5));
+
+executorService.shutdown();
+
+// 결과 값
+result: 3 (pool-1-thread-1) 
+result: 4 (pool-1-thread-2) 
+result: 5 (pool-1-thread-2) 
+result: 6 (pool-1-thread-2)
+
+private static Runnable addRunnable(int num1, int num2){
+        return () -> System.out.println("result: " + (num1 + num2) + " (" + Thread.currentThread().getName() + ") ");
+}
+```
+
+→ 두개의 메소드가 일을 나눠서 진행한다.
+
+```java
+ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+
+System.out.println("실행" + LocalDateTime.now());
+
+// 1초 기다렸다가 1초에 한 번씩 실행
+scheduledExecutorService.scheduleAtFixedRate(printRunnable("스레드 테스트"),1,1, TimeUnit.SECONDS);
+
+try{
+    Thread.sleep(10000L);
+  }catch (Exception e){
+            System.out.println(e);
+}
+
+scheduledExecutorService.shutdown();
+
+// 결과 값
+실행2023-02-27T21:40:25.703463600
+스레드 테스트 (pool-1-thread-1, 2023-02-27T21:40:26.721811800) 
+스레드 테스트 (pool-1-thread-1, 2023-02-27T21:40:27.718921400) 
+스레드 테스트 (pool-1-thread-1, 2023-02-27T21:40:28.731032300) 
+스레드 테스트 (pool-1-thread-1, 2023-02-27T21:40:29.727121500) 
+스레드 테스트 (pool-1-thread-1, 2023-02-27T21:40:30.721804700) 
+스레드 테스트 (pool-1-thread-1, 2023-02-27T21:40:31.718342400) 
+스레드 테스트 (pool-1-thread-1, 2023-02-27T21:40:32.727992400) 
+스레드 테스트 (pool-1-thread-1, 2023-02-27T21:40:33.724149300) 
+스레드 테스트 (pool-1-thread-1, 2023-02-27T21:40:34.718175200) 
+스레드 테스트 (pool-1-thread-1, 2023-02-27T21:40:35.729977200)
+```
+
+→ 주기적으로 호출되는 Thread
+
+### Future 사용 방법
+
+- Future -Blocking 방식의 작업 완료 통보
+- Future 객체는 작업이 완료 될 때까지 기다렸다가 최종 결과를 얻는데 사용한다. 이를 지연완료 객체라고 한다.
+
+```java
+ExecutorService service = Executors.newSingleThreadExecutor();
+Future thread = service.submin(printRunnable("Thread"));
+
+thread.get();
+System.out.println("후처리);
+
+private static Runnable printRunnable(String message) throws Exception{
+        return () -> {
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println(message + " (" + Thread.currentThread().getName() + ", " + LocalDateTime.now() + ") ");
+        };
+    }
+
+// 결과 값
+// 후처리가 printRunnable 이 끝난 이후에 호출된다
+```
+
+```java
+ExecutorService service = Executors.newSingleThreadExecutor();
+Future<String> submit = service.submin(returnRunnable());
+
+String result = submit.get()
+
+System.out.println(s);
+
+private static Runnable addRunnable(int num1, int num2){
+        return () -> {
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("result: " + (num1 + num2) + " (" + Thread.currentThread().getName() + ") ");
+        };
+    }
+
+// 결과 값
+// thread 종료 이후에 호출됨
+```
+
+→ 스레드가 종료될 때까지 기다려 주는 처리 라고 보면 된다.
+
+**(특정 스레드가 끝나야지만 다음 처리가 되야할 경우 사용 하면 좋을 듯)**
