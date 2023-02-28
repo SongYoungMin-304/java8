@@ -809,7 +809,7 @@ CompletableFuture의 장점
 
 **→ 즉 결론적으로 비동기 처리를 할 때 특정 스레드를 기다리는 등으로 사용하던 Future를 보다 편리하게 사용할 수 있게 하고 다양한 기능을 추가해준 JAVA8의 신규 기능?**
 
-### **1) runAsync(반환값 없음)**
+### 1) runAsync(반환값 없음)**
 
 ```java
 CompletableFuture<Void> tmp1 = CompletableFuture.runAsync(() ->{
@@ -854,7 +854,7 @@ public static CompletableFuture<Void> runAsync(Runnable runnable) {
 runAsync ForkJoinPool.commonPool-worker-19
 ```
 
-### 2**) supplyAsync(반환값 있음)**
+### 2) supplyAsync(반환값 있음)**
 
 ```java
 CompletableFuture<String> tmp2 = CompletableFuture.supplyAsync(callableSample());
@@ -912,7 +912,7 @@ public interface interfaceTest {
 
 → 실제로 print를 호출할 때 구현체만 호출하면 구현체에 있는 print2를 호출
 
-### 3**) thenApply(CompletableFuture 연결, Function)**
+### 3) thenApply(CompletableFuture 연결, Function)**
 
 ```java
 CompletableFuture<String> tmp3 = CompletableFuture.supplyAsync(()
@@ -963,7 +963,7 @@ ForkJoinPool.commonPool-worker-19
 
 → thenApply 와 completableFuture 동일한 스레드 사용
 
-### 4**) thenAccept(CompletableFuture 연결, Consumser)**
+### 4) thenAccept(CompletableFuture 연결, Consumser)**
 
 ```java
 CompletableFuture<Void> tmp4 = CompletableFuture.supplyAsync(() ->{
@@ -995,7 +995,7 @@ ForkJoinPool.commonPool-worker-19
 
 → thenApply 와 completableFuture 동일한 스레드 사용
 
-### 5**) thenRun(CompletableFuture 연결, Consumser)**
+### 5) thenRun(CompletableFuture 연결, Consumser)**
 
 ```java
 CompletableFuture<Void> tmp5 = CompletableFuture.supplyAsync(() ->{
@@ -1033,7 +1033,7 @@ thenRunForkJoinPool.commonPool-worker-19
 할 일이 없으면, Deque에서 가져와서 처리하는 방식의 프로엠 워크
 자기가 파생시킨 서브 태스크들을 다른 스레드들에 분산시켜 처리하고 모아서 Join 하는 식으로 작업단위를 구성
 
-### 6**) 스레드 풀을 직접 만들어 진행해 해보기**
+### 6) 스레드 풀을 직접 만들어 진행해 해보기**
 
 ```java
 ExecutorService executorService2 = Executors.newFixedThreadPool(4);
