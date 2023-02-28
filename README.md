@@ -735,3 +735,327 @@ private static Runnable addRunnable(int num1, int num2){
 → 스레드가 종료될 때까지 기다려 주는 처리 라고 보면 된다.
 
 **(특정 스레드가 끝나야지만 다음 처리가 되야할 경우 사용 하면 좋을 듯)**
+
+### Future 사용 방법
+
+- Future -Blocking 방식의 작업 완료 통보
+- Future 객체는 작업이 완료 될 때까지 기다렸다가 최종 결과를 얻는데 사용한다. 이를 지연완료 객체라고 한다.
+
+```java
+ExecutorService service = Executors.newSingleThreadExecutor();
+Future thread = service.submin(printRunnable("Thread"));
+
+thread.get();
+System.out.println("후처리);
+
+private static Runnable printRunnable(String message) throws Exception{
+        return () -> {
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println(message + " (" + Thread.currentThread().getName() + ", " + LocalDateTime.now() + ") ");
+        };
+    }
+
+// 결과 값
+// 후처리가 printRunnable 이 끝난 이후에 호출된다
+```
+
+```java
+ExecutorService service = Executors.newSingleThreadExecutor();
+Future<String> submit = service.submin(returnRunnable());
+
+String result = submit.get()
+
+System.out.println(s);
+
+private static Runnable addRunnable(int num1, int num2){
+        return () -> {
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("result: " + (num1 + num2) + " (" + Thread.currentThread().getName() + ") ");
+        };
+    }
+
+// 결과 값
+// thread 종료 이후에 호출됨
+```
+
+→ 스레드가 종료될 때까지 기다려 주는 처리 라고 보면 된다.
+
+**(특정 스레드가 끝나야지만 다음 처리가 되야할 경우 사용 하면 좋을 듯)**
+
+### CompletableFuture
+
+Future의 제약
+
+1. Future를 외부에서 완료시킬 수 없다.
+2. 블로킹 코드(get()) 이후에 콜백 등을 정의해서 사용해야한다.
+
+ (Future에서는 return 되는 결과 값을 가지고 무언가를 하려면 get() 이후에만 가능하다.
+
+1. 여러 Future 조합을 사용할 수 없다.
+2. 예외 처리용 API를 제공하지 않는다.
+
+CompletableFuture의 장점
+
+1. Future와 달리 외부에서 명시적으로 Complete를 시켜버릴 수 있다.
+2. CompletableFuture를 사용하면 명시적으로 Executors 를 사용할 필요가 없어진다.(fork Join)
+
+**→ 즉 결론적으로 비동기 처리를 할 때 특정 스레드를 기다리는 등으로 사용하던 Future를 보다 편리하게 사용할 수 있게 하고 다양한 기능을 추가해준 JAVA8의 신규 기능?**
+
+### **1) runAsync(반환값 없음)**
+
+```java
+CompletableFuture<Void> tmp1 = CompletableFuture.runAsync(() ->{
+     System.out.println("runAsync " + Thread.currentThread().getName());
+});
+
+tmp1.get();
+
+CompletableFuture<Void> tmp1 = CompletableFuture.runAsync(runnableSample());
+// 위와 동일하게 사용 가능..
+
+private static Runnable runnableSample(){
+  Runnable runnable = new Runnable() {
+   @Override
+   public void run() {
+    System.out.println("runAsync " + Thread.currentThread().getName());
+   }
+  };
+    return runnable;
+ }
+
+private static Runnable runnableSample(){
+   return () -> {
+     System.out.println("runAsync " + Thread.currentThread().getName());
+   }
+}
+```
+
+구현체
+
+```java
+-- 실제 구현체
+public static CompletableFuture<Void> runAsync(Runnable runnable) {
+        return asyncRunStage(ASYNC_POOL, runnable);
+    }
+
+```
+
+결과 값
+
+```java
+runAsync ForkJoinPool.commonPool-worker-19
+```
+
+### 2**) supplyAsync(반환값 있음)**
+
+```java
+CompletableFuture<String> tmp2 = CompletableFuture.supplyAsync(callableSample());
+
+// 같은 소스
+CompletableFuture<String> tmp3 = CompletableFuture.supplyAsync(() -> {
+     return "song";
+});
+
+String s = tmp2.get();
+System.out.println(s);
+
+private static Supplier<String> callableSample(){
+  Supplier<String> supplier = new Supplier<String>() {
+   @Override
+   public String get() {
+    return "song";
+   }
+  };
+
+```
+
+구현체
+
+```java
+public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier) {
+        return asyncSupplyStage(ASYNC_POOL, supplier);
+    }
+```
+
+결과 값
+
+```java
+song
+```
+
+***번외**
+
+```java
+xxxx.print(() -> {
+    System.out.println("테스트");
+});
+
+private static void print(interfaceTest interfaceTest){
+  interfaceTest.print2();
+  System.out.println("끝");
+ }
+
+public interface interfaceTest {
+    public void print2();
+}
+```
+
+→ 인터페이스를 만들고 메소드에서 인터페이스의 메소드를 호출하게 만든다.
+
+→ 실제로 print를 호출할 때 구현체만 호출하면 구현체에 있는 print2를 호출
+
+### 3**) thenApply(CompletableFuture 연결, Function)**
+
+```java
+CompletableFuture<String> tmp3 = CompletableFuture.supplyAsync(()
+->{
+      System.out.println("callback " + Thread.currentThread().getName());
+      return "CallBack";
+  }).thenApply((s) -> {
+    System.out.println(Thread.currentThread().getName());
+    return s.toUpperCase();
+});
+
+CompletableFuture<String> tmp77 = CompletableFuture.supplyAsync(()
+    ->{
+   System.out.println("callback " + Thread.currentThread().getName());
+   return "CallBack";
+  }).thenApply(addFunction());
+
+private static Function addFunction(){
+  Function<String, String> function = new Function<String, String>() {
+   @Override
+   public String apply(String s) {
+    return s.toUpperCase();
+   }
+  };
+
+    
+```
+
+→ 스레드가 실행 된 이후에 결과 값을 가지고 다시 한번 처리(thenApply)
+
+→ future 에서는 get() 이후에 호출했어야 했
+
+구현체
+
+```java
+public <U> CompletableFuture<U> thenApply(
+        Function<? super T,? extends U> fn) {
+        return uniApplyStage(null, fn);
+    }
+```
+
+결과 값
+
+```java
+callback ForkJoinPool.commonPool-worker-19
+ForkJoinPool.commonPool-worker-19
+```
+
+→ thenApply 와 completableFuture 동일한 스레드 사용
+
+### 4**) thenAccept(CompletableFuture 연결, Consumser)**
+
+```java
+CompletableFuture<Void> tmp4 = CompletableFuture.supplyAsync(() ->{
+   System.out.println("callback2 " + Thread.currentThread().getName());
+   return "callback2";
+  }).thenAccept((k) -> {
+   //Consumser
+   System.out.println(Thread.currentThread().getName());
+   System.out.println(k.toUpperCase());
+  });
+
+  tmp4.get();
+```
+
+구현체
+
+```java
+public CompletableFuture<Void> thenAccept(Consumer<? super T> action) {
+        return uniAcceptStage(null, action);
+    }
+```
+
+결과 값
+
+```java
+callback ForkJoinPool.commonPool-worker-19
+ForkJoinPool.commonPool-worker-19
+```
+
+→ thenApply 와 completableFuture 동일한 스레드 사용
+
+### 5**) thenRun(CompletableFuture 연결, Consumser)**
+
+```java
+CompletableFuture<Void> tmp5 = CompletableFuture.supplyAsync(() ->{
+            System.out.println("callback3" + Thread.currentThread().getName());
+            return "callback3";
+        }).thenRun(() ->{
+            System.out.println("thenRun" + Thread.currentThread().getName());
+        }); // 결과 값을 참조하지 않는다 Runnable
+
+        tmp5.get();
+```
+
+구현체
+
+```java
+public CompletableFuture<Void> thenRun(Runnable action) {
+        return uniRunStage(null, action);
+    }
+```
+
+결과 값
+
+```java
+callback3ForkJoinPool.commonPool-worker-19
+thenRunForkJoinPool.commonPool-worker-19
+```
+
+### ForkJoinPool
+
+→ 어떻게 스레드 풀을 만들지 않고 별도의 스레드들로 동작을 하는 걸까?
+
+→ ForkJoinPool 때문에 가능한다.
+
+* ForkJoinPool 이란 Executor 구현체 중 하나인데, Deque를 통하여 자기 스레드가
+할 일이 없으면, Deque에서 가져와서 처리하는 방식의 프로엠 워크
+자기가 파생시킨 서브 태스크들을 다른 스레드들에 분산시켜 처리하고 모아서 Join 하는 식으로 작업단위를 구성
+
+### 6**) 스레드 풀을 직접 만들어 진행해 해보기**
+
+```java
+ExecutorService executorService2 = Executors.newFixedThreadPool(4);
+  CompletableFuture<String> tmp6 = CompletableFuture.supplyAsync(() ->{
+   System.out.println("ThreadPool " + Thread.currentThread().getName());
+   return " ThreadPool";
+  }, executorService2).thenApply((s)->{
+   System.out.println("ThreadPool " + Thread.currentThread().getName());
+   return "new"+s;
+  });
+
+System.out.println(tmp6.get());
+
+executorService2.shutdown();*/
+```
+
+→ executorService2 로 정의한 스레드를 통해서 실행한값
+
+결과 값
+
+```java
+ThreadPool pool-1-thread-1
+ThreadPool pool-1-thread-1
+new ThreadPool
+```
