@@ -1173,3 +1173,93 @@ HelloForkJoinPool.commonPool-worker-19
 Hello
 HelloWorld
 ```
+
+
+### 10**) 여러 작업 중 가장 빨리 끝난 하나의 결과에 콜백을 실행**
+
+```java
+CompletableFuture<String> hello = CompletableFuture.supplyAsync(() -> {
+   System.out.println("Hello" + Thread.currentThread().getName());
+   return "Hello";
+  });
+
+CompletableFuture<String> world = hello.thenCompose((s) -> getWorld(s));
+
+List<CompletableFuture<String>> futures = Arrays.asList(hello, world);
+
+CompletableFuture[] futuresArray = futures.toArray(new CompletableFuture[futures.size()]);
+
+CompletableFuture<Void> voidCompletableFuture = CompletableFuture.anyOf(futuresArray)
+    .thenAccept(System.out::println);
+
+voidCompletableFuture.get();
+```
+
+결과
+
+```java
+HelloForkJoinPool.commonPool-worker-19
+Hello
+```
+
+→ hello 가 먼저 끝남
+
+### 11**) 예외처리**
+
+```java
+boolean throwError = true;
+
+CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+     if(throwError) {
+       throw new IllegalArgumentException();
+     }
+
+     System.out.println("Hello " + Thread.currentThread().getName());
+   return "hello";
+  }).exceptionally(ex -> {
+     System.out.println(ex);
+     return "Error";
+  });
+
+System.out.println(future.get());
+  
+
+```
+
+결과
+
+```java
+java.util.concurrent.CompletionException: java.lang.IllegalArgumentException
+Error
+```
+
+### 12**) 예외처리-2**
+
+```java
+boolean throwError = false;
+
+  CompletableFuture<String> hello = CompletableFuture.supplyAsync(() -> {
+   if(throwError){
+    throw new IllegalArgumentException();
+   }
+   System.out.println("Hello " +Thread.currentThread().getName());
+   return "Hello";
+  }).handle((result, ex) -> {
+   if(ex != null){
+    System.out.println(ex);
+    return "Error";
+   }
+   return result;
+  });
+
+System.out.println(hello.get());
+```
+
+결과
+
+```java
+Hello ForkJoinPool.commonPool-worker-19
+Hello
+```
+
+→ handler 를 통해서 성공, 실패 처리
