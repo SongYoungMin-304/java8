@@ -1059,3 +1059,117 @@ ThreadPool pool-1-thread-1
 ThreadPool pool-1-thread-1
 new ThreadPool
 ```
+
+
+### 7**) CompletableFuture 여러 개 조합**
+
+```java
+CompletableFuture<String> hello = CompletableFuture.supplyAsync(() -> {
+     System.out.println("Hello" + Thread.currentThread().getName());
+     return "Hello";
+});
+
+CompletableFuture<String> world = hello.thenCompose((s) -> getWorld(s));
+// hello 다음에 getWorld 호출하게 처리
+
+// static 으로 getWorld 정의
+private static CompletableFuture<String> getWorld(String message) {
+     return CompletableFupter.supplyAsync(() -> {
+         System.out.println(message + Thread.currentThread().getName());
+         return message + "World";
+     });
+}
+
+String s = world.get();
+
+```
+
+→ thenCompose로 hello 이후에 getWorld 를 실행하는 스레드를 정의
+
+결과 값
+
+```java
+HelloForkJoinPool.commonPool-worker-19
+HelloForkJoinPool.commonPool-worker-19
+HelloWorld
+```
+
+### 8**) CompletableFuture 두 작업을 독립적으로 실행하고, 둘 다 종료했을때**
+
+```java
+CompletableFuture<String> hello = CompletableFuture.supplyAsync(() -> {
+      System.out.println("Hello" + Thread.currentThread().getName());
+      return "Hello";
+});
+
+CompletableFuture<String> world = hello.thenCompose((s) -> getWorld(s));
+// hello 다음에 getWorld 호출하게 처리
+
+CompletableFuture<String> future = hello.thenCombine(world, (h, w) -> {
+    return h + " " + w;
+});
+
+// static 으로 getWorld 정의
+private static CompletableFuture<String> getWorld(String message) {
+     return CompletableFupter.supplyAsync(() -> {
+         System.out.println(message + Thread.currentThread().getName());
+         return message + "World";
+     });
+}
+
+String s = future.get();
+System.out.println(s);
+```
+
+→ hello 와 world를 정의하고 두개가 다 끝나면 두개의 결과 값을 합쳐서 출력하는 CompletableFuture 정의
+
+결과
+
+```java
+HelloForkJoinPool.commonPool-worker-19
+HelloForkJoinPool.commonPool-worker-19
+Hello HelloWorld
+```
+
+### 9**) 여러 작업을 모두 실행하고 모든 작업 결과에 콜백실행하려면?**
+
+```java
+CompletableFuture<String> hello = CompletableFuture.supplyAsync(() -> {
+    System.out.println("Hello" + Thread.currentThread().getName());
+    return "Hello";
+});
+
+CompletableFuture<String> world = hello.thenCompose((s) -> getWorld(s));
+
+List<CompletableFuture<String>> futures = Arrays.asList(hello, world);
+
+CompletableFuture[] futuresArray = futures.toArray(new CompletableFuture[futures.size()]);
+
+CompletableFuture<List<String>> result = CompletableFuture.allOf(futuresArray)
+                .thenApply(v -> {
+                    return futures.stream()
+                            .map((s) -> s.join())  // CompletableFuture::join
+                            .collect(Collectors.toList());
+                });
+        
+        result.get().forEach((s) -> System.out.println(s)); //System.out::println
+
+// static 으로 getWorld 정의
+private static CompletableFuture<String> getWorld(String message) {
+     return CompletableFupter.supplyAsync(() -> {
+         System.out.println(message + Thread.currentThread().getName());
+         return message + "World";
+     });
+}
+```
+
+→ 여러개 작업을 실행하고 콜백을 받는다.
+
+결과
+
+```java
+HelloForkJoinPool.commonPool-worker-19
+HelloForkJoinPool.commonPool-worker-19
+Hello
+HelloWorld
+```
